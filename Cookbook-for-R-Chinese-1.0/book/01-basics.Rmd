@@ -1,0 +1,403 @@
+\mainmatter
+
+# 基础 {#chapter1}
+
+## 安装和使用 R 包 {#r-pkg-installation}
+  
+### 问题
+ 
+你想安装和使用一个 R 包。
+ 
+### 方案
+ 
+如果你正在使用支持 R 的图形界面软件，应该存在通过菜单栏方式安装 R 包的选项（例如，常用的 Rstudio 中，可以点击菜单栏 **Tools** 中的 **Install Packages...** 进行 R 包的安装）。这里主要介绍如何用命令行来安装 R 包，如下所示：
+ 
+```
+install.packages("reshape2")  # reshap2为包名
+```
+ 
+在一个新 R 线程中使用该包之前，你必须先导入它。
+ 
+```
+library(reshape2)
+```
+
+如果你在一个脚本中使用该包，将这一行输入脚本中。
+ 
+如果想要将所有已安装的软件包更新为可用的最新版本，使用以下命令：
+
+```
+update.packages()
+```
+ 
+如果你在 Linux 系统上使用 R ，管理员可能已经在系统上安装了一些 R 包，由于普通用户没有更改权限，所以你可能不能以上述方式对 R 包更新。
+ 
+ 
+### 其他 {-}
+ 
+导入包也可以使用`require()`函数。下表显示了 R 包安装相关的命令及描述。
+
+```{r echo=FALSE}
+tb <- tibble::tribble(
+  ~`命令`, ~`描述`,
+  "installed.packages", "返回一个矩阵，包含所有已安装的包信息",
+  "available.packages", "返回一个矩阵，包含资源库上所有可用的R包",
+  "old.packages", "返回一个矩阵，显示所有已安装的包中具有新版本的包",
+  "new.packages", "返回一个矩阵，包含所有已安装的包信",
+  "download.packages", "下载一系列R包到本地目录",
+  "install.packages", "从资源库下载安装一系列R包",
+  "remove.packages", "移除一系列已安装的R包",
+  "installed.packages", "将已经安装的R包更新到最新版本",
+  "setRepositories", "设定当前的R包的资源库列表 ",
+)
+knitr::kable(tb, caption = "常见包安装命令")
+```
+
+
+**通过命令行安装 R 包**
+
+```shell
+R CMD INSTALL aplpack_1.1.1.tgz  # 安装aplpack包
+```
+
+**从其他资源库安装 R 包**
+
+**devtools** 包提供了从其他流行的 Git 资源库或其他 URL 上安装 R 包的工具。
+
+例如，我们想安装开发版本的 **ggplot2** 包，可以使用下面命令：
+
+```{r, eval = FALSE}
+# 如果没有安装devtools，需要先安装
+install.packages("devtools")
+library(devtools)
+install_github("ggplot2")
+```
+
+## 数据结构的索引
+
+### 问题
+
+你想获得数据结构的一部分。
+
+### 方案
+
+可以使用数字索引或通过使用适当长度的布尔向量来提取向量、矩阵或数据框中的元素。
+以下例子中使用了多种方式来解决这一问题。
+
+#### 使用数字和名称进行索引
+
+对于向量
+
+```{r}
+# 样本向量
+v <- c(1, 4, 4, 3, 2, 2, 3)
+v[c(2, 3, 4)]
+v[2:4]
+v[c(2, 4, 3)]
+```
+
+对于数据框：
+
+```{r}
+# 创建样本数据框
+data <- read.table(header = T, text = "
+ subject sex size
+       1   M    7
+       2   F    6
+       3   F    9
+       4   M   11
+ ")
+
+# 获取位于第一行第三列的元素
+data[1, 3]
+data[1, "size"]
+
+# 获取第1行和第2行所有列上的元素
+data[1:2, ]
+data[c(1, 2), ]
+
+# 获取一，二两行第二列上的元素
+data[1:2, 2]
+data[c(1, 2), 2]
+
+# 获取行1和2，名为“sex”和 "size"的列
+data[1:2, c("sex", "size")]
+data[c(1, 2), c(2, 3)]
+```
+
+#### 使用布尔向量进行索引
+
+向量 `v` 同上。
+
+```{r}
+v > 2
+v[v > 2]
+v[c(F, T, T, T, F, F, T)]
+```
+
+数据框同上。
+
+```{r}
+# 一个布尔向量
+data$subject < 3
+data[data$subject < 3, ]
+data[c(TRUE, TRUE, FALSE, FALSE), ]
+# 也可以获取TRUE的数字索引
+which(data$subject < 3)
+```
+
+#### 负索引
+
+与其他某些编程语言不同，当您在 R 中使用负数进行索引时，并不意味着从后向前索引。相反，它意味着按照通常的从前往后顺序删除索引中的元素。
+
+```{r}
+# 还是这个向量
+v
+
+# 删除第一个
+v[-1]
+
+# 删除前三个
+v[-1:-3]
+
+# 只删除最后一个
+v[-length(v)]
+```
+
+
+## 获取数据结构的子集
+
+
+### 问题
+
+你想得到一个由向量、矩阵或数据框里元素组成的子集。
+
+
+### 方案
+
+为了基于一些条件准则获得子集，可以使用 `subset()` 函数或者是方括号索引。 两种方式均在下方举例说明。
+
+```{r}
+v <- c(1, 4, 4, 3, 2, 2, 3)
+subset(v, v < 3)
+v[v < 3]
+
+# 另一个向量
+t <- c("small", "small", "large", "medium")
+
+# 删除 "small" 这一项
+subset(t, t != "small")
+t[t != "small"]
+```
+
+这两种方法之间的一个重要区别在于方括号索引可以为元素赋值，而 `subset()` 不可以。
+
+```{r, error=TRUE}
+v[v < 3] <- 9
+subset(v, v < 3) <- 9
+```
+
+数据框：
+
+```{r}
+# 样本数据框
+data <- read.table(header = T, text = "
+ subject sex size
+       1   M    7
+       2   F    6
+       3   F    9
+       4   M   11
+ ")
+subset(data, subject < 3)
+data[data$subject < 3, ]
+
+
+# 特定行和列的子集
+subset(data, subject < 3, select = -subject)
+subset(data, subject < 3, select = c(sex, size))
+subset(data, subject < 3, select = sex:size)
+data[data$subject < 3, c("sex", "size")]
+
+# 逻辑与的两个条件
+subset(data, subject < 3 & sex == "M")
+data[data$subject < 3 & data$sex == "M", ]
+
+
+# 逻辑或的两个条件
+subset(data, subject < 3 | sex == "M")
+data[data$subject < 3 | data$sex == "M", ]
+
+
+# 基于转换数据的条件
+subset(data, log2(size) > 3)
+data[log2(data$size) > 3, ]
+
+# 当元素在另一个向量里时的子集
+subset(data, subject %in% c(1, 3))
+data[data$subject %in% c(1, 3), ]
+```
+
+
+## 创建填满值的向量
+ 
+### 问题
+ 
+你想创建一个填满值的列表。
+ 
+### 方案
+ 
+```{r}
+rep(1, 50)
+rep(F, 20)
+rep(1:5, 4)
+rep(1:5, each = 4)
+
+# 用在因子变量上
+rep(factor(LETTERS[1:3]), 5)
+```
+ 
+## 变量信息
+
+### 问题
+
+你想找到关于变量的信息。
+
+### 方案
+
+以下为关于样本变量的一些例子：
+
+```{r}
+x <- 6
+n <- 1:4
+let <- LETTERS[1:4]
+df <- data.frame(n, let)
+```
+
+#### 关于存在的信息
+
+```{r, error=TRUE}
+# 列出当前所定义的变量
+ls()
+
+# 检查名为“x”的变量是否存在
+exists("x")
+
+# 检查名为“y”的变量是否存在
+exists("y")
+
+# 删除变量“x”
+rm(x)
+x
+```
+
+#### 关于大小/结构的信息
+
+```{r}
+# 获得关于结构的信息
+str(n)
+str(df)
+
+# 得到一个向量的长度
+length(n)
+
+# 可能会得不到我们想要的长度
+length(df)
+
+# 行数
+nrow(df)
+
+# 列数
+ncol(df)
+
+# 得到行数和列数
+dim(df)
+```
+
+## NULL、NA、NaN 的处理
+
+### 问题
+
+你想正确处理`NULL`、`NA` （Not Available）、`NaN`（Not a Number）。
+
+### 方案
+
+你的数据有时将会存在`NULL`、`NA` 、`NaN`。处理这些数据有些不同于「正常」值，并可能需要确定性测试。
+
+以下是这些值相比较的例子：
+
+```{r}
+x <- NULL
+x > 5
+
+y <- NA
+y > 5
+
+z <- NaN
+z > 5
+```
+
+如何测试某个变量是否是其中的一个值：
+
+```{r}
+is.null(x)
+is.na(y)
+is.nan(z)
+```
+
+注意，`NULL` 不同于其他两个。`NULL` 意味着没有值，而 `NA` 和 `NaN` 表示有值，尽管也许是不可用的。下面有一个例子区分：
+
+```{r}
+# y 是 null 吗？
+is.null(y)
+# FALSE
+
+# x 是 NA 吗？
+is.na(x)
+```
+
+第一个例子，检查 `y` 是否是 `NULL` ，结果 `y` 并不是；第二个例子，试图检查 `x` 是否是 `NA`，但并没有值被检测。
+
+#### 忽视向量汇总函数中的「坏」值
+
+如果你对包含 `NA` 或 `NaN` 的向量使用诸如 `mean()` 或 `sum()` 之类的函数，结果将返回 `NA` 和 `NaN`，这通常没有任何意义，虽然这样的结果会提醒你有「坏」值的存在。许多函数都有 `na.rm`，可以将这些值忽略。
+
+```{r}
+vy <- c(1, 2, 3, NA, 5)
+mean(vy)
+mean(vy, na.rm = TRUE)
+vz <- c(1, 2, 3, NaN, 5)
+sum(vz)
+sum(vz, na.rm = TRUE)
+
+# NULL不是问题，因为它不存在
+vx <- c(1, 2, 3, NULL, 5)
+sum(vx)
+```
+
+#### 从向量中移除「坏值」
+
+使用 `is.na()` 或 `is.nan()` 的反向函数，可以将这些值移除。
+
+```{r}
+vy
+vy[!is.na(vy)]
+vz
+vz[!is.nan(vz)]
+```
+
+#### 注意
+
+也有无限值 `Inf` 和 `-Inf`，及其相应的函数 `is.finite()` 和 `is.infinite()`。
+
+```{r, include=FALSE}
+detachAllPackages <- function() {
+  basic.packages <- c("package:stats", "package:graphics", "package:grDevices", "package:utils", "package:datasets", "package:methods", "package:base")
+  package.list <- search()[ifelse(unlist(gregexpr("package:", search())) == 1, TRUE, FALSE)]
+  package.list <- setdiff(package.list, basic.packages)
+  if (length(package.list) > 0) for (package in package.list) detach(package, character.only = TRUE)
+}
+detachAllPackages()
+```
+
+
+

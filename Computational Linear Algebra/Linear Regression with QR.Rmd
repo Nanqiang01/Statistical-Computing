@@ -1,0 +1,158 @@
+---
+title: Linear Regression with QR
+author: 南墙
+date: 2022.04.01
+output: 
+  html_notebook:
+    toc_float: 
+      smooth_scroll: true
+    toc: true
+    css: C:\Users\13263\AppData\Roaming\Typora\themes\pie.css
+    highlight: pygments
+    MathJex: D:\Program Files\R\R-4.1.3\library\MathJex\MathJex.js
+---
+
+## 基本线性代数
+
+### 矩阵行列式
+
+R中用于计算行列式的函数为`det()`，其中'x'为矩阵，'x'的行数等于列数。
+
+```{r, comment="##", tidy=TRUE}
+x <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9), nrow = 3)
+det(x)
+```
+
+还有一个函数`determinant()`，用于可以计算对数行列式。
+
+```{r, comment="##", tidy=TRUE}
+x <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9), nrow = 3)
+determinant(x)
+```
+
+### 特征值和特征向量
+
+特征值和特征向量可以使用函数`eigen()`来计算。
+
+```{r, comment="##", tidy=TRUE}
+x <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9), nrow = 3)
+eigen(x)
+```
+
+特征值可以用于检验一个矩阵是否可逆。
+
+矩阵的行列式用`det()`来计算，是其所有特征值的乘积: 
+$det(A) = \lambda_1 \lambda_2 \cdots \lambda_n$
+
+```{r, comment="##", tidy=TRUE}
+x <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9), nrow = 3)
+det(x)
+```
+
+矩阵的迹用`trace()`来计算，是其所有特征值的和: 
+$trace(A) = \lambda_1 + \lambda_2 + \cdots + \lambda_n$
+
+```{r, comment="##", tidy=TRUE}
+x <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9), nrow = 3)
+library(psych)
+tr(x)
+```
+
+### 三角矩阵
+
+函数`lower.tri()`和`upper.tri()`可用于获取矩阵的下三角和上三角。
+
+```{r, comment="##", tidy=TRUE}
+x <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9), nrow = 3)
+x[lower.tri(x)] <- 0
+x
+x <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9), nrow = 3)
+x[upper.tri(x)] <- 0
+x
+```
+
+### Outer Product
+
+`Outer()`函数用来对两个向量中所有可能成对的向量进行计算
+
+```{r, comment="##", tidy=TRUE}
+x1 <- seq(1, 5)
+outer(x1, x1, "/")
+y <- seq(5, 10)
+outer(x1, y, "+")
+```
+
+### 张量积
+
+如果A是一个$m \times n$矩阵，B是一个$p \times q$矩阵，
+则克罗内克积$A \otimes B$是$mp \times nq$块矩阵:
+
+```{r, comment="##", tidy=TRUE}
+x1 <- seq(1, 5)
+y <- seq(5, 10)
+kronecker(x1, y)
+```
+
+### 矩阵的逆
+
+矩阵$A_{m \times n}$的广义逆：
+
+定义：$A^+A = I$;
+
+因为$(A^{'}A)^{-1}A^{'}A = I$，
+所以$A^+ = (A^{'}A)^{-1}A^{'}$
+
+矩阵的广义逆不是唯一的，但是很有用
+
+### QR分解
+
+QR分解是将矩阵$A$分解成正交矩阵$Q$和上三角矩阵$R$的乘积。
+
+与直接的矩阵逆运算相比，使用QR分解的逆解在数值上更加稳定，这一点从其减少的条件数可以看出。
+
+为了解决over-determined的$(m > n)$线性回归$Ax=b$，其中矩阵$A$为$m \times n$，秩为$m$。
+
+首先找到$A$的转置的QR分解$A：A^T = QR$ ，其中$Q$是一个正交矩阵（即$Q^T = Q^{-1}$），
+而$R$有一个特殊的形式：
+$R = \left[ {\begin{array}{*{20}{c}}{{R_1}}\\0\end{array}} \right]$,
+这里$R_1$是一个$m \times m$的右三角矩阵，而零矩阵的维度为$(n-m)\times m$。
+
+对于under-determined的$(m > n)$线性回归$Ax=b$，
+
+### 使用QR分解解线性回归
+
+对于线性回归$y = X\hat \beta$，QR方法比$(X^TX)^{-1}X^Ty$稍慢，但更准确。
+
+运算过程如下：
+
+$$
+\hat \beta  = (X^TX)^{-1}X^Ty\\
+    = ((QR)^TQR)^{-1}(QR)^Ty\\
+    = (R^TQ^TQR)^{-1}(QR)^Ty\\
+    = (R^TR)^{-1}R^TQ^Ty\\
+    = R^{-1}Q^Ty
+$$
+
+### QR分解解线性回归例子
+
+```{r, comment="##", tidy=TRUE}
+X <- cbind(1, 2:6, matrix(rnorm(15), 5))
+y <- matrix(c(7.97, 10.2, 14.2, 16.0, 21.2))
+QR <- qr(X)
+R <- qr.R(QR, complete = TRUE)
+Q <- qr.Q(QR, complete = TRUE)
+betaHat_QR <- qr.solve(X, y) # 使用QR分解解线性回归
+betaHat_QR
+system.time(density(betaHat_QR))
+betaHat_Tri <- solve(t(X) %*% X) %*% t(X) %*% y # 矩阵计算解线性回归
+betaHat_Tri
+system.time(density(betaHat_Tri))
+```
+
+QR分解计算效率更高，且QR分解的精度更高一些。
+
+### 奇异值分解
+
+在线性代数中，奇异值分解（SVD）是实数或复数矩阵的因子化，在信号处理和统计学中有许多有用的应用。
+
+从形式上看，一个$(m \times n)$的实数或复数矩阵M的奇异值分解是一种因式分解的形式。

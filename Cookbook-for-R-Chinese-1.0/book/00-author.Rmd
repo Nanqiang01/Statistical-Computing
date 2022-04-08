@@ -1,0 +1,5 @@
+# 作者简介 {#author .unnumbered}
+
+Winston Chang <winston@stdout.org>
+
+Winston 是 RStudio 的软件工程师，他是软件包 **Shiny**、**ggplot2** 和 **devtools** 的开发者。他获得西北大学的心理学专业博士学位，也是 O'Reilly Media 出版的《R Graphics Cookbook》的作者。

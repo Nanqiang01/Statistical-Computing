@@ -1,0 +1,270 @@
+---
+title: 20-R-Graphics
+author: 南墙
+date: 2022.04.06
+output: 
+    html_notebook:
+        toc_float: 
+            smooth_scroll: true
+        toc: true
+        css: C:\Users\13263\AppData\Roaming\Typora\themes\pie.css
+        highlight: pygments
+        MathJex: D:\Program Files\R\R-4.1.3\library\MathJex\MathJex.js
+---
+
+
+# 常用高级图形
+
+## 条形图
+
+从cancer.csv读入数据
+
+```{r, comment="##", tidy=TRUE}
+d.cancer <- readr::read_csv("D:\\Codefield\\R\\Statistical-Computing\\R Graphics\\cancer.csv")
+```
+
+用table()函数创建列联表
+
+```{r, comment="##", tidy=TRUE}
+res1 <- table(d.cancer[, "sex"])
+print(res1)
+```
+
+画出条形图:
+
+main选项增加标题，col选项使用不同的颜色，width选项与xlim选项配合调整条形宽度
+
+```{r, comment="##", tidy=TRUE}
+barplot(res1,
+    width = 0.5, xlim = c(-3, 5),
+    main = "性别分布",
+    col = c("#ff6b81", "#3498db")
+)
+```
+
+## 列联表
+
+按性别与病理类型交叉分组后统计频数，结果称为列联表
+
+```{r, comment="##", tidy=TRUE}
+res2 <- with(d.cancer, table(sex, type))
+print(res2)
+```
+
+用分段条形图表现交叉分组频数，交叉频数表每列为一条
+
+```{r, comment="##", tidy=TRUE}
+barplot(res2, legend = TRUE)
+```
+
+用并排条形图表现交叉分组频数， 交叉频数表每列为一组
+
+```{r, comment="##", tidy=TRUE}
+barplot(res2, beside = TRUE, legend = TRUE)
+```
+
+## 直方图
+
+函数`hist()`用来画直方图
+
+可以用main=、xlab=、ylab=等选项指定标题和坐标轴， 可以用col=指定各个条形的颜色
+
+```{r, comment="##", tidy=TRUE}
+x <- rnorm(30, mean = 100, sd = 1)
+print(round(x, 2))
+hist(x,
+    col = rainbow(15),
+    main = "正态随机数", xlab = "", ylab = "频数"
+)
+```
+
+## 密度估计图
+
+函数`density()`估计核密度。下面的程序作直方图，并添加核密度曲线
+
+```{r, comment="##", tidy=TRUE}
+tmp.dens <- density(x)
+hist(x,
+    freq = FALSE,
+    ylim = c(0, max(tmp.dens$y)),
+    col = rainbow(15),
+    main = "正态随机数",
+    xlab = "", ylab = "频率"
+)
+lines(tmp.dens, lwd = 2, col = "pink")
+```
+
+## 箱型图
+
+箱型图的横线表示各个分位点
+
+其中中间粗线是中位数， 盒子上下边缘是$\frac{1}{4}$和$\frac{3}{4}$分位数， 两条触须线延伸到取值区域的边缘。
+
+盒形图可以很容易地比较两组或多组，如
+
+```{r, comment="##", tidy=TRUE}
+with(d.cancer, boxplot(v0 ~ sex))
+```
+
+也可以画若干个变量的并排盒形图，如
+
+```{r, comment="##", tidy=TRUE}
+with(
+    d.cancer,
+    boxplot(list("疗前" = v0, "疗后" = v1))
+)
+```
+
+## 正态QQ图
+
+用`qqnorm`和`qqline`作正态QQ图。
+
+当变量样本来自正态分布总体时，正态QQ图的散点近似在一条直线周围。
+
+```{r, comment="##", tidy=TRUE}
+qqnorm(x)
+qqline(x, lwd = 2, col = "pink")
+```
+
+## 散点图
+
+```{r, comment="##", tidy=TRUE}
+d.class <- readr::read_csv("D:\\Codefield\\R\\Statistical-Computing\\R Graphics\\class.csv")
+```
+
+画出体重对身高的散点图
+
+在`plot()`函数内用`main`参数增加标题， 用`xlab`参数指定横轴标注， 用`ylab`参数指定纵轴标注，如
+
+用`pch`参数指定不同散点形状，用`col`参数指定颜色， 用`cex`参数指定大小，如：
+
+```{r, comment="##", tidy=TRUE}
+with(
+    d.class,
+    plot(height, weight,
+        main = "体重与身高关系",
+        xlab = "身高", ylab = "体重",
+        pch = 16, col = "pink",
+        cex = 2
+    )
+)
+```
+
+用气泡大小表现年龄， 用颜色区分性别
+
+```{r, comment="##", tidy=TRUE}
+with(
+    d.class,
+    plot(height, weight,
+        main = "体重与身高关系",
+        xlab = "身高", ylab = "体重",
+        pch = 16,
+        col = ifelse(sex == "M", "blue", "pink"),
+        cex = 1 + (age - min(age)) / (max(age) - min(age))
+    )
+)
+```
+`
+用`pairs()`函数可以做散点图矩阵
+
+```{r, comment="##", tidy=TRUE}
+pairs(d.class[, c("age", "height", "weight")])
+```
+
+## 曲线图
+
+`curve()`函数接受一个函数，或者一个以x为变量的表达式，以及曲线的自变量的左、右端点，绘制函数或者表达式的曲线图
+
+```{r, comment="##", tidy=TRUE}
+curve(1 - 3 * exp(x) - x^2, -4, 2)
+```
+
+在`plot()`函数中使用 `type=’l’`参数可以作曲线图
+
+除了仍可以用`main`, `xlab`, `ylab`, `col`等参数外，还可以用`lwd`指定线宽度，`lty`指定虚线，如
+
+```{r, comment="##", tidy=TRUE}
+x <- seq(0, 2 * pi, length = 200)
+y <- cos(x) + sin(x)
+plot(x, y, type = "l", lwd = 2, lty = 3)
+```
+
+多条曲线， 可以用`matplot()`函数。例如
+
+```{r, comment="##", tidy=TRUE}
+x <- seq(0, 2 * pi, length = 200)
+y1 <- sin(x)
+y2 <- cos(x)
+matplot(x, cbind(y1, y2),
+    type = "l",
+    lty = 1, lwd = 2, col = c("pink", "blue"),
+    xlab = "x", ylab = ""
+)
+abline(h = 0, col = "gray")
+```
+
+## 三维图
+
+用`persp`函数作三维曲面图, `contour`作等值线图， `image`作色块图。 坐标`x`和`y`构成一张平面网格， 数据`z`是包含`z`坐标的矩阵，每行对应一个横坐标， 每列对应一个纵坐标。
+
+```{r, comment="##", tidy=TRUE}
+x <- seq(-3, 3, length = 100)
+y <- x
+f <- function(x, y, ssq1 = 1, ssq2 = 2, rho = 0.5) {
+    det1 <- ssq1 * ssq2 * (1 - rho^2)
+    s1 <- sqrt(ssq1)
+    s2 <- sqrt(ssq2)
+    1 / (2 * pi * sqrt(det1)) * exp(-0.5 / det1 * (
+        ssq2 * x^2 + ssq1 * y^2 - 2 * rho * s1 * s2 * x * y))
+}
+z <- outer(x, y, f)
+persp(x, y, z)
+contour(x, y, z)
+image(x, y, z)
+```
+
+# ggplot作图
+
+## 散点图
+
+首先调用ggplot()函数， 指定数据集， 将身高映射到x轴， 将体重映射到y轴， 结果保存为一个R变量
+
+```{r, comment="##", tidy=TRUE}
+library("ggplot2")
+p <- ggplot(
+    data = d.class,
+    mapping = aes(
+        x = height,
+        y = weight
+    )
+)
+```
+
+在如上指定了数据和映射后， 只要用`geom_xxx()`指定一个图形类型， 并与`ggplot()`的结果用加号连接就可以作图了
+
+```{r, comment="##", tidy=TRUE}
+p + geom_point()
+```
+
+用相同的映射做出拟合曲线图
+
+`geom_smooth()`的默认设置调用了`gam()`函数来拟合曲线， 可以用`geom_smooth()`的参数选择不同的拟合方法， 如直线拟合
+
+```{r, comment="##", tidy=TRUE}
+p + geom_smooth(method = "lm")
+```
+
+用相同的映射做出散点图并叠加拟合曲线图
+
+```{r, comment="##", tidy=TRUE}
+p + geom_point() + geom_smooth(method = "lm")
+```
+
+# R Graphic Gallary中的图形
+
+## 词云图
+
+```{r, comment="##", tidy=TRUE}
+library(wordcloud2)
+wordcloud2(data = demoFreqC, size = 2, fontFamily = "Source Han Serif", color = "random-light", backgroundColor = "grey")
+```

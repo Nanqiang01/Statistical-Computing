@@ -1,0 +1,25 @@
+---
+title: logNormLike
+author: 南墙
+date: 2022.04.01
+output: 
+  html_notebook:
+    toc_float: 
+      smooth_scroll: true
+    toc: true
+    css: C:\Users\13263\AppData\Roaming\Typora\themes\pie.css
+    highlight: pygments
+    MathJex: D:\Program Files\R\R-4.1.3\library\MathJex\MathJex.js
+---
+
+
+## 定义极大似然函数
+
+假设每天走路步长$(x_i)$独立同分布于标准正态分布$N(\mu, \sigma)$，极大似然函数为
+
+```{r, comment='##', tidy=TRUE}
+logNormLike <- function(mu, sigma, data) {
+  out <- sum(dnorm(x = data, mean = mu, sd = sigma, log = TRUE))
+  return(out)
+}
+```

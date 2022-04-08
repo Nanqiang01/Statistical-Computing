@@ -1,0 +1,120 @@
+---
+title: Random Numbers
+author: 南墙
+date: 2022.03.26
+output: 
+  html_notebook:
+    toc_float: 
+      smooth_scroll: true
+    toc: true
+    css: C:\Users\13263\AppData\Roaming\Typora\themes\pie.css
+    highlight: pygments
+    MathJex: D:\Program Files\R\R-4.1.3\library\MathJex\MathJex.js
+---
+
+## 求随机数
+
+runif(n, a, b) 其中 n 是生成随机数的个数，a、b 分别是随机数的上下界
+
+```{r, comment = '##'}
+runif(10, 0, 1)
+```
+
+## 随机数种子
+
+set.seed(n) 用于控制复现生成的随机数 其中 n 是种子的编号
+
+```{r, highlight=TRUE, comment = '##'}
+set.seed(123)
+runif(10, 0, 1)
+set.seed(123)
+runif(10, 0, 1)
+```
+
+## 求正态分布随机变量的密度
+
+dnorm(x, mu, sigma) x 为随机变量的取值，mu 为期望，sigma 为方差
+
+```{r}
+dnorm(0, 0, 1)
+```
+
+## 对数形式
+
+当 x 极小时，可以用对数表示：dnorm(x, mu, sigma, log = TRUE)
+
+```{r}
+dnorm(-100, 0, 1, log = TRUE)
+```
+
+## 精度问题
+
+直接使用 log() 函数无法得到正确值（浮点数精度问题）
+
+```{r}
+log(dnorm(-100, 0, 1))
+```
+
+## 累计密度
+
+求正态分布随机变量的累积密度 (Cumulate Desity Function)：pnorm(q, mu, sigma) 其中 q 是积分上界（分位点）
+
+```{r}
+pnorm(0, 0, 1)
+```
+
+## 分位点
+
+求分位点（给定 CDF）：qnorm(p, mu, sigma) 其中 p 为该分位点的累计密度
+
+```{r}
+qnorm(0.5, 0, 1)
+```
+
+## 分布随机数
+
+求正态分布的随机数：rnorm(n, mu, sigma) 其中 n 是随机数的个数
+
+```{r}
+rnorm(10, 0, 1)
+```
+
+## 直方图
+
+用直方图展示生成的随机数：hist()
+
+```{r}
+hist(rnorm(10, 0, 1))
+```
+
+## 向量形式的密度
+
+求向量形式的正态分布随机变量的密度
+
+```{r}
+pnorm(c(1, 2, 3), 0, 1)
+```
+
+## 画正态分布的密度函数曲线
+
+```{r}
+x <- seq(-5, 5, 0.1)
+d <- dnorm(x, 0, 1)
+plot(x, d, type = "l")
+```
+
+## 画正态分布的分布函数曲线
+
+```{r}
+x <- seq(-5, 5, 0.1)
+p <- pnorm(x, 0, 1)
+plot(x, p, type = "l")
+```
+
+## 合并两幅图
+
+```{r}
+par(mfrow = c(1, 2))
+plot(x, d, type = "l")
+plot(x, p, type = "l")
+```

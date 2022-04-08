@@ -1,0 +1,116 @@
+# 公式
+
+```{r, include=F}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## 通过字符串创建公式
+
+### 问题
+
+你想通过字符串创建公式。
+
+### 方案
+
+通过字符串的方式来创建公式是非常有用的。这通常用于需要将公式参数当做字符串传入函数中。
+
+最基础实用的方法就是调用函数 `as.formula()`:
+
+```{r}
+# 这将返回一个字符串
+"y ~ x1 + x2"
+
+# 这将返回一个公式
+as.formula("y ~ x1 + x2")
+```
+
+下面是一个简单实例：
+
+```{r}
+# 存在一些变量名:
+measurevar <- "y"
+groupvars  <- c("x1","x2","x3")
+
+# 创建合适的字符串:
+paste(measurevar, paste(groupvars, collapse=" + "), sep=" ~ ")
+
+# 返回公式:
+as.formula(paste(measurevar, paste(groupvars, collapse=" + "), sep=" ~ "))
+```
+
+
+## 从公式中提取组分
+
+### 问题
+
+你想抽离公式的一部分用来使用。
+
+### 方案
+
+你可以把公式对象当作列表看待，使用 `[[` 操作符对其组分进行操作。
+
+```{r}
+f <- y ~ x1 + x2
+
+# 观察f结构
+str(f)
+
+# 获得每一部分
+f[[1]]
+f[[2]]
+f[[3]]
+
+# 转换为列表观察
+as.list(f)
+```
+
+如果公式左边没有任何东西，那么列表只有两个元素：
+
+```{r}
+f2 <- ~ x1 + x2
+as.list(f2)
+```
+
+公式的每一个元素都是一个符号或者语言对象（包含多个符号）：
+
+```{r}
+str(f[[1]])
+str(f[[2]])
+str(f[[3]])
+
+# 查看语言对象某部分
+str(f[[3]][[1]])
+str(f[[3]][[2]])
+str(f[[3]][[3]])
+
+```
+
+你可以使用 `as.character()` 或 `deparse()` 函数将它们转为字符串。 `deparse()` 函数可以返回一个看起来更为自然的结果：
+
+```{r}
+as.character(f[[1]])
+#> [1] "~"
+as.character(f[[2]])
+#> [1] "y"
+
+# 这里语言对象被强制转换为代表解析树的字符向量
+as.character(f[[3]])
+#> [1] "+"  "x1" "x2"
+
+# 使用 deparse() 获取更为自然的结果
+deparse(f[[3]])
+deparse(f)
+```
+
+正如我们在运行 `str(f)` 命令时看到的那样，公式对象也会捕捉调用它的环境。如果要抽取它，可以使用 `environment()` 函数：
+
+```{r}
+environment(f)
+```
+
+```{r, include=FALSE}
+detachAllPackages()
+```
