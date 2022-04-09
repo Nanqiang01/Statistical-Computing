@@ -231,12 +231,11 @@ plot(gridx, gridy, "l",
     lwd = 3, main = "Function", xlab = "n", ylab = "value of g(x)"
 )
 points(gridx, gridy, pch = 18, col = "black")
-png("test.png")
+
 gridx <- seq(0, root7[[2]], 1)
 gridy <- dg4(root7[[1]])
 plot(gridx, gridy, "l",
     lwd = 3, main = "Function", xlab = "n", ylab = "value of dg(x)"
 )
 points(gridx, gridy, pch = 18, col = "black")
-dev.off()
 # --------------------
