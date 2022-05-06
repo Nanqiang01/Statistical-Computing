@@ -7,9 +7,8 @@ output:
         toc_float: 
             smooth_scroll: true
         toc: true
-        css: C:\Users\13263\AppData\Roaming\Typora\themes\pie.css
+        css: /mnt/c/Users/13263/AppData/Roaming/Typora/themes/pie.css
         highlight: pygments
-        MathJex: D:\Program Files\R\R-4.1.3\library\MathJex\MathJex.js
 ---
 
 
@@ -20,7 +19,7 @@ output:
 从cancer.csv读入数据
 
 ```{r, comment="##", tidy=TRUE}
-d.cancer <- readr::read_csv("D:\\Codefield\\R\\Statistical-Computing\\R Graphics\\cancer.csv")
+d.cancer <- readr::read_csv("/mnt/d/Codefield/R/Statistical-Computing/R Graphics/cancer.csv")
 ```
 
 用table()函数创建列联表
@@ -129,7 +128,7 @@ qqline(x, lwd = 2, col = "pink")
 ## 散点图
 
 ```{r, comment="##", tidy=TRUE}
-d.class <- readr::read_csv("D:\\Codefield\\R\\Statistical-Computing\\R Graphics\\class.csv")
+d.class <- readr::read_csv("/mnt/d/Codefield/R/Statistical-Computing/R Graphics/class.csv")
 ```
 
 画出体重对身高的散点图
@@ -223,7 +222,7 @@ contour(x, y, z)
 image(x, y, z)
 ```
 
-# ggplot作图
+# ggplot2作图
 
 ## 散点图
 
@@ -266,5 +265,5 @@ p + geom_point() + geom_smooth(method = "lm")
 
 ```{r, comment="##", tidy=TRUE}
 library(wordcloud2)
-wordcloud2(data = demoFreqC, size = 2, fontFamily = "Source Han Serif", color = "random-light", backgroundColor = "grey")
+letterCloud(demoFreq, "R")
 ```
