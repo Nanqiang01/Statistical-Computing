@@ -1,0 +1,226 @@
+---
+title: Logistic_Regression-Optimization
+author: 南墙
+date: 2022.05.09
+output: 
+    html_notebook:
+        toc_float: 
+            smooth_scroll: true
+        toc: true
+        css: /mnt/c/Users/13263/AppData/Roaming/Typora/themes/pie.css
+        highlight: tango
+---
+
+## 数据集说明
+
+数据集包含学生GRE成绩和被录取的状态(admit = 1，为被录取；admit = 0，没有被录取)
+
+```{r, comment="#>", tidy=TRUE}
+data <- read.csv("/mnt/d/Codefield/R/Statistical-Computing/homework/gredata.csv")
+print(head(data))
+```
+
+## 逻辑回归的对数似然函数
+
+令$y=admit, X=(1,gre,gpa,rank)=(X_{i1},X_{i2},X_{i3},X_{14}), \beta=(\beta_1,\beta_2,\beta_3,\beta_4)(i=1,2,\cdots,n;j=1,2,\cdots,m)$，设
+$$
+p(y_i=1|X_i;\beta)=p(X_i)=\frac{e^{X_i \beta ^T}}{1+e^{X_i \beta ^T}}\\
+p(y_i=0|X_i;\beta)=1-p(X_i)=\frac{1}{1+e^{X_i \beta ^T}}.
+$$
+则似然函数为：
+$$
+L(\beta) = \prod\limits_{i=1}^{n} {{{[p({X_i})]}^{{y_i}}}} {[1 - p({X_i})]^{1 - {y_i}}},
+$$
+因此，逻辑回归的对数似然函数为：
+$$
+\ell(\beta) = \sum\limits_{i=1}^{n} {\{ {y_i}\ln p({X_i}) + (1 - {y_i})\ln [1 - p({X_i})]} \}\\
+= \sum\limits_{i=1}^{n} {\{ {y_i}\ln \frac{p({X_i})}{1-p({X_i})} + \ln [1 - p({X_i})]} \}\\
+= \sum\limits_{i=1}^{n} {[ {y_i}(\beta ^T {X_i}) - \ln (1 + e^{\beta ^T {X_i}})}].
+$$
+
+在R语言中，可写为这样的函数：
+
+```{r, comment="#>", tidy=TRUE}
+loglikelogit <- function(beta) {
+  Xb <- X %*% beta
+  log1Xb <- log(1 + exp(Xb))
+  loglike <- (t(y) %*% Xb) - sum(log1Xb)
+  return(loglike)
+}
+```
+
+## 对数似然函数的梯度函数
+
+对数似然函数的梯度函数为：
+$$
+\frac{\partial \ell(\beta)}{\partial \beta} = -\sum\limits_{i=1}^{n} {X_i(y_i-p(X_i))}
+$$
+
+在R语言中，可写为这样的函数：
+
+```{r, comment="#>", tidy=TRUE}
+gradlogit <- function(beta) {
+  Xb <- X %*% beta
+  pXb <- 1 / (exp(-Xb) + 1)
+  grad <- t(X) %*% (pXb - y)
+  return(grad)
+}
+```
+
+## 对数似然函数的海塞矩阵
+
+对数似然函数的海塞矩阵为：
+$$
+\frac{\partial^2 \ell(\beta)}{\partial \beta \partial \beta^T} = \sum\limits_{i=1}^{n} {X_i X_i^Tp(X_i;\beta)(1-p(X_i))}
+$$
+
+在R语言中，可写为这样的函数：
+
+```{r, comment="#>", tidy=TRUE}
+hessianlogit <- function(beta) {
+  Xb <- X %*% beta
+  weight <- exp(Xb) / ((1 + exp(Xb))^2)
+  diag <- diag(as.vector(weight))
+  hessian <- t(X) %*% diag %*% X
+  return(hessian)
+}
+```
+
+## 使用`glm()`估计参数系数
+
+使用R语言自带的逻辑回归函数`glm()`来估计逻辑回归的参数$\beta$。
+
+R程序如下：
+
+```{r, comment="#>", tidy=TRUE}
+glm.solve <- glm(formula = admit ~ gre + gpa + rank, data = data, family = binomial)
+cat("glm()参数估计为", glm.solve$coefficients)
+```
+
+## 牛顿迭代算法与`glm()`比较
+
+使用牛顿迭代算法求解逻辑回归参数的最优解，其第$t+1$轮的最优解如下：
+$$
+\beta^{t+1} = \beta^{t}-\left({\frac{\partial^2 \ell(\beta)}{\partial \beta \partial \beta^T}}\right)^{-1}\frac{\partial \ell(\beta)}{\partial \beta}
+$$
+
+R程序如下：
+
+```{r, comment="#>", tidy=TRUE}
+y <- data$admit
+X <- cbind(1, data$gre, data$gpa, data$rank)
+beta <- solve(t(X) %*% X, t(X) %*% y) # 初始值
+epsilon <- 1E-10 # 误差限
+MaxIter <- 500 # 最大迭代次数
+i <- 1
+betanew <- beta - solve(hessianlogit(beta), gradlogit(beta))
+change <- abs(loglikelogit(betanew) - loglikelogit(beta))
+while ((i <= MaxIter) && (change > epsilon)) {
+  i <- i + 1
+  beta <- cbind(beta, betanew)
+  betanew <- beta[, i] - solve(hessianlogit(beta[, i]), gradlogit(beta[, i]))
+  change <- abs(loglikelogit(betanew) - loglikelogit(beta[, i]))
+}
+beta <- cbind(beta, betanew)
+cat("共迭代", i, "次", "\n")
+cat("牛顿迭代法系数估计为", betanew, "\n")
+cat("误差为", change)
+```
+
+牛顿迭代算法迭代过程及结果与`glm()`求解结果对比
+
+```{r, comment="#>", tidy=TRUE}
+library(ggplot2)
+Newtonloglike <- outMatrix <- matrix(rep(NaN), i)
+for (j in 1:i) {
+  Newtonloglike[j] <- loglikelogit(beta[, j])
+}
+Newton.data <- data.frame(
+  Iteration = c(1:i),
+  Newtonloglike = matrix(Newtonloglike),
+  glmloglike = matrix(rep(loglikelogit(glm.solve$coefficients)), i)
+)
+p <- ggplot(data = Newton.data)
+p + geom_line(aes(x = Iteration, y = Newtonloglike, color = "牛顿迭代法")) +
+  geom_line(aes(x = Iteration, y = glmloglike, color = "glm()")) +
+  labs(
+    title = "牛顿迭代法与glm()结果对比",
+    x = "迭代次数",
+    y = "对数似然函数取值"
+  ) +
+  guides(color = guide_legend(title = "参数估计方法"))
+```
+
+## 随机梯度下降算法与`glm()`比较
+
+使用随机梯度下降算法求解逻辑回归参数的最优解，其第$t+1$轮的最优解如下：
+$$
+\beta^{t+1} = \beta^{t}-\alpha \nabla J(\beta_i^{t})
+$$
+
+R程序如下：
+
+```{r, comment="#>", tidy=TRUE}
+y <- data$admit
+X <- cbind(1, data$gre, data$gpa, data$rank)
+n <- length(y)
+sgd.logisticReg.cost.grad <- function(X, y, beta) {
+  n <- length(y)
+  if (!is.matrix(X)) {
+    X <- matrix(X, nrow = 1)
+  }
+  t(X) %*% (1 / (1 + exp(-X %*% beta)) - y) / n
+}
+beta <- c(-3.5, 0, 0.7, -0.5) # 初始值
+epsilon <- 1E-5 # 误差限
+MaxIter <- 10000 # 最大迭代次数
+alpha <- 0.000002 # 设定初始学习速率
+n.samples <- 1 # 设定随机选取的样本量
+i <- 1
+sto.sample <- sample(1:n, n.samples, replace = TRUE) # 选取的随机样本索引
+betanew <- beta - alpha * sgd.logisticReg.cost.grad(X[sto.sample, ], y[sto.sample], beta) # nolint
+change <- abs(loglikelogit(betanew) - loglikelogit(beta)) # nolint
+while ((i <= MaxIter) && (change > epsilon)) {
+  i <- i + 1
+  beta <- cbind(beta, betanew)
+  alpha <- 0.000004 / i + 0.00000000002 # 设定动态学习速率
+  sto.sample <- sample(1:n, n.samples, replace = TRUE)
+  betanew <- beta[, i] - alpha * sgd.logisticReg.cost.grad(X[sto.sample, ], y[sto.sample], beta[, i]) # nolint
+  change <- abs(loglikelogit(betanew) - loglikelogit(beta[, i])) # nolint
+}
+if (abs(loglikelogit(betanew) - loglikelogit(beta[, i])) > epsilon) { # nolint
+  cat("算法无法收敛。 \n")
+} else {
+  cat("算法收敛\n")
+  cat("共迭代", i, "次", "\n")
+  cat("系数估计为：", betanew, "\n")
+  cat("误差为", change)
+  beta <- cbind(beta, betanew)
+}
+```
+
+随机梯度下降算法迭代过程及结果与`glm()`求解结果对比
+
+```{r, comment="#>", tidy=TRUE}
+library(ggplot2)
+sgdloglike <- outMatrix <- matrix(rep(NaN), i)
+for (j in 1:i) {
+  sgdloglike[j] <- loglikelogit(beta[, j])
+}
+sgd.data <- data.frame(
+  Iteration = c(1:i),
+  sgdloglike = matrix(sgdloglike),
+  glmloglike = matrix(rep(loglikelogit(glm.solve$coefficients)), i)
+)
+p <- ggplot(data = sgd.data)
+p + geom_line(aes(x = Iteration, y = sgdloglike, color = "随机梯度下降")) +
+  geom_line(aes(x = Iteration, y = glmloglike, color = "glm()")) +
+  labs(
+    title = "随机梯度下降与glm()结果对比",
+    x = "迭代次数",
+    y = "对数似然函数取值"
+  ) +
+  guides(color = guide_legend(title = "参数估计方法"))
+```
+
+注：由于对随机梯度下降理解还不够深，我随机梯度下降的代码运行起来有问题，会在迭代次数非常少的情况下就停止迭代，或者无法迭代到正确的值。光凭我个人的能力暂时看不出来是在哪里出了bug，若是老师看见这段话希望能帮我纠正一下，谢谢老师！

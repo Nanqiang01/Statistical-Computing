@@ -1,3 +1,4 @@
+library("lpSolve")
 f.obj <- c(rep(1000, 3), rep(750, 3), rep(250, 3))
 f.con <- matrix(c(
   rep(c(1, 0, 0), 3), rep(c(0, 1, 0), 3), rep(c(0, 0, 1), 3),

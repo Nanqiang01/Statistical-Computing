@@ -69,7 +69,7 @@ barplot(res2, beside = TRUE, legend = TRUE)
 可以用main=、xlab=、ylab=等选项指定标题和坐标轴， 可以用col=指定各个条形的颜色
 
 ```{r, comment="##", tidy=TRUE}
-x <- rnorm(30, mean = 100, sd = 1)
+x <- rnorm(300, mean = 100, sd = 1)
 print(round(x, 2))
 hist(x,
     col = rainbow(15),
